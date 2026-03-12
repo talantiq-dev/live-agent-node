@@ -8,7 +8,7 @@ export declare class GeminiAgentBridge implements AgentBridge {
     protected session: any;
     constructor(genAI: any);
     onServerContent: (content: ServerContent) => void;
-    onClientAction: (action: ClientAction) => void;
+    onClientAction: (action: ClientAction) => Promise<any>;
     onError: (error: any) => void;
     start(config: {
         systemInstruction: string;
@@ -18,6 +18,7 @@ export declare class GeminiAgentBridge implements AgentBridge {
     }): Promise<void>;
     protected handleGeminiMessage(msg: any): void;
     sendMedia(chunk: MediaChunk): Promise<void>;
-    sendContext(context: string): Promise<void>;
+    sendContext(context: string, turnComplete?: boolean): Promise<void>;
+    sendToolResponse(actionId: string, name: string, result: any): Promise<void>;
     stop(): Promise<void>;
 }

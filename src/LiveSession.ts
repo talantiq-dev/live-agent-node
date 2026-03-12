@@ -11,6 +11,7 @@ export class LiveSession extends EventEmitter {
     private agent: AgentBridge | null = null;
     private pendingActions = new Map<string, { resolve: (val: any) => void, timeout: NodeJS.Timeout }>();
     private preAgentQueue: ClientEvent[] = [];
+    private lastContextSent: string = '';
 
     constructor(private client: SessionClient) {
         super();
@@ -60,7 +61,23 @@ export class LiveSession extends EventEmitter {
                 break;
             case 'app_state':
                 this.emit('app_state', event.data);
-                this.agent.sendContext(`[SYSTEM STATE UPDATE]: ${JSON.stringify(event.data)}`);
+                const context = `[SYSTEM STATE UPDATE]: ${JSON.stringify(event.data)}`;
+
+                // Avoid redundant updates within seconds if they are 1:1 identical
+                if (context === this.lastContextSent) {
+                    // console.log('[LiveSession] Skipping redundant app_state');
+                    return;
+                }
+                this.lastContextSent = context;
+
+                const isSilent = !!event.data?.isSilent;
+                const sysNotification = event.data?.systemNotification || event.data?.stepText;
+
+                // If there's a system notification, we want a response regardless of isSilent
+                const shouldRespond = !!sysNotification || !isSilent;
+
+                console.log(`[LiveSession] app_state (isSilent: ${isSilent}, shouldRespond: ${shouldRespond})`);
+                this.agent.sendContext(context, shouldRespond);
                 break;
             case 'action_confirmation':
                 const pending = this.pendingActions.get(event.data.actionId);
@@ -90,7 +107,11 @@ export class LiveSession extends EventEmitter {
 
         // Return result back to the agent
         if (this.agent) {
-            this.agent.sendContext(`[ACTION RESULT]: ${JSON.stringify(result)}`);
+            if (this.agent.sendToolResponse) {
+                this.agent.sendToolResponse(action.actionId, action.type, result);
+            } else {
+                this.agent.sendContext(`[ACTION RESULT for ${action.type}]: ${JSON.stringify(result)}`);
+            }
         }
     }
 

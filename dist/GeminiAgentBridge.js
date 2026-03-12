@@ -12,7 +12,7 @@ class GeminiAgentBridge {
         this.genAI = genAI;
     }
     onServerContent = () => { };
-    onClientAction = () => { };
+    onClientAction = async () => { };
     onError = () => { };
     async start(config) {
         const targetModel = config.model || 'gemini-2.0-flash-exp';
@@ -89,10 +89,20 @@ class GeminiAgentBridge {
             });
         }
     }
-    async sendContext(context) {
+    async sendContext(context, turnComplete = true) {
         this.session?.sendClientContent({
             turns: [{ role: 'user', parts: [{ text: context }] }],
-            turnComplete: true,
+            turnComplete,
+        });
+    }
+    async sendToolResponse(actionId, name, result) {
+        console.log(`[GeminiAgentBridge] Sending tool response for ${name}`);
+        this.session?.sendToolResponse({
+            functionResponses: [{
+                    name: name,
+                    response: { result },
+                    id: actionId
+                }]
         });
     }
     async stop() {

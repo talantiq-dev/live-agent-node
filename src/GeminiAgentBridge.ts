@@ -10,7 +10,7 @@ export class GeminiAgentBridge implements AgentBridge {
     constructor(protected genAI: any) { }
 
     public onServerContent: (content: ServerContent) => void = () => { };
-    public onClientAction: (action: ClientAction) => void = () => { };
+    public onClientAction: (action: ClientAction) => Promise<any> = async () => { };
     public onError: (error: any) => void = () => { };
 
     public async start(config: { systemInstruction: string; tools: any[]; modality: Modality; model?: string }): Promise<void> {
@@ -95,10 +95,21 @@ export class GeminiAgentBridge implements AgentBridge {
         }
     }
 
-    public async sendContext(context: string): Promise<void> {
+    public async sendContext(context: string, turnComplete: boolean = true): Promise<void> {
         this.session?.sendClientContent({
             turns: [{ role: 'user', parts: [{ text: context }] }],
-            turnComplete: true,
+            turnComplete,
+        });
+    }
+
+    public async sendToolResponse(actionId: string, name: string, result: any): Promise<void> {
+        console.log(`[GeminiAgentBridge] Sending tool response for ${name}`);
+        this.session?.sendToolResponse({
+            functionResponses: [{
+                name: name,
+                response: { result },
+                id: actionId
+            }]
         });
     }
 
