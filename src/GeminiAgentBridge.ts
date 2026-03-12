@@ -77,14 +77,21 @@ export class GeminiAgentBridge implements AgentBridge {
             console.log(`[GeminiAgentBridge] Sending media chunk to Gemini: ${chunk.mimeType}`);
         }
 
-        // Google GenAI SDK automatically maps `.media` into `mediaChunks`, 
-        // stringifies the JSON, and sends it to the server!
-        this.session?.sendRealtimeInput({
-            media: {
-                mimeType: chunk.mimeType,
-                data: chunk.data
-            }
-        });
+        if (chunk.mimeType?.startsWith('image/')) {
+            this.session?.sendRealtimeInput({
+                mediaChunks: [{
+                    mimeType: chunk.mimeType,
+                    data: chunk.data
+                }]
+            } as any);
+        } else {
+            this.session?.sendRealtimeInput({
+                audio: {
+                    mimeType: chunk.mimeType || 'audio/pcm;rate=16000',
+                    data: chunk.data
+                }
+            });
+        }
     }
 
     public async sendContext(context: string): Promise<void> {
