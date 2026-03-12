@@ -14,6 +14,7 @@ export declare class GeminiAgentBridge implements AgentBridge {
         systemInstruction: string;
         tools: any[];
         modality: Modality;
+        model?: string;
     }): Promise<void>;
     protected handleGeminiMessage(msg: any): void;
     sendMedia(chunk: MediaChunk): Promise<void>;
