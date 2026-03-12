@@ -44,16 +44,31 @@ export class GeminiAgentBridge implements AgentBridge {
 
     protected handleGeminiMessage(msg: any) {
         if (msg.serverContent) {
-            const parts = msg.serverContent.modelTurn?.parts || [];
-            const audio = parts.find((p: any) => p.inlinePcm)?.inlinePcm?.data;
+            const serverContent = msg.serverContent || msg.server_content;
+            const modelTurn = serverContent?.modelTurn || serverContent?.model_turn;
+            const parts = modelTurn?.parts || [];
+
+            // Search for audio payload across all possible Vertex and GenAI keys
+            let audioData: string | undefined;
+            for (const p of parts) {
+                const audioObj = p.inlinePcm || p.inline_pcm || p.inlineData || p.inline_data;
+                if (audioObj?.data) {
+                    audioData = audioObj.data;
+                    break;
+                }
+            }
+
             const text = parts.find((p: any) => p.text)?.text;
 
-            if (audio) {
-                console.log(`[GeminiAgentBridge] 🎵 Received Audio Response: ${audio.length} bytes`);
+            if (audioData) {
+                console.log(`[GeminiAgentBridge] 🎵 Received Audio Response: ${audioData.length} bytes`);
+            } else if (parts.length > 0 && Math.random() < 0.1) {
+                // Log partial structure occasionally if expected audio is missing
+                console.log(`[GeminiAgentBridge] Parsed parts, but found no audio inlinePcm. Keys:`, parts.map((p: any) => Object.keys(p)).flat());
             }
 
             this.onServerContent({
-                audio,
+                audio: audioData,
                 text,
                 turnComplete: msg.serverContent.turnComplete,
                 interrupted: msg.serverContent.interrupted,
