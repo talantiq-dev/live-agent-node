@@ -14,7 +14,7 @@ export class GeminiAgentBridge implements AgentBridge {
     public onError: (error: any) => void = () => { };
 
     public async start(config: { systemInstruction: string; tools: any[]; modality: Modality; model?: string }): Promise<void> {
-        const targetModel = config.model || 'gemini-2.0-flash-exp';
+        const targetModel = config.model || 'gemini-2.5-flash-native-audio';
         console.log(`[GeminiAgentBridge] Connecting to Live API with model: ${targetModel}`);
         this.session = await this.genAI.live.connect({
             model: targetModel,
