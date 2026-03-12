@@ -25,10 +25,6 @@ export class GeminiAgentBridge implements AgentBridge {
             },
             callbacks: {
                 onmessage: (msg: any) => {
-                    // Log raw message keys for debugging when they arrive
-                    if (Math.random() < 0.05) {
-                        console.log(`[GeminiAgentBridge] Raw message type: ${Object.keys(msg).join(', ')}`);
-                    }
                     this.handleGeminiMessage(msg)
                 },
                 onerror: (err: any) => {
@@ -60,13 +56,6 @@ export class GeminiAgentBridge implements AgentBridge {
 
             const text = parts.find((p: any) => p.text)?.text;
 
-            if (audioData) {
-                console.log(`[GeminiAgentBridge] 🎵 Received Audio Response: ${audioData.length} bytes`);
-            } else if (parts.length > 0 && Math.random() < 0.1) {
-                // Log partial structure occasionally if expected audio is missing
-                console.log(`[GeminiAgentBridge] Parsed parts, but found no audio inlinePcm. Keys:`, parts.map((p: any) => Object.keys(p)).flat());
-            }
-
             this.onServerContent({
                 audio: audioData,
                 text,
@@ -88,9 +77,6 @@ export class GeminiAgentBridge implements AgentBridge {
     }
 
     public async sendMedia(chunk: MediaChunk): Promise<void> {
-        if (Math.random() < 0.05) {
-            console.log(`[GeminiAgentBridge] Sending media chunk to Gemini: ${chunk.mimeType}`);
-        }
 
         if (chunk.mimeType?.startsWith('image/')) {
             this.session?.sendRealtimeInput({
