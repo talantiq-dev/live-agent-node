@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { AgentBridge } from '@live-agent/core';
+import { ClientEvent, AgentBridge } from '@live-agent/core';
 export interface SessionClient {
     send: (data: string) => void;
     onMessage: (handler: (data: string) => void) => void;
@@ -10,7 +10,14 @@ export declare class LiveSession extends EventEmitter {
     private agent;
     private pendingActions;
     constructor(client: SessionClient);
+    /**
+     * Handle raw JSON string message (backwards compatibility).
+     */
     handleClientMessage(data: string): void;
+    /**
+     * Handle structured client event directly.
+     */
+    handleEvent(event: ClientEvent): void;
     setAgent(agent: AgentBridge): void;
     private handleClientEvent;
     private handleActionRequest;

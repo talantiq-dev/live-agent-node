@@ -9,17 +9,25 @@ class LiveSession extends events_1.EventEmitter {
     constructor(client) {
         super();
         this.client = client;
-        this.client.onMessage((data) => this.handleClientMessage(data));
         this.client.onClose(() => this.emit('disconnected'));
     }
+    /**
+     * Handle raw JSON string message (backwards compatibility).
+     */
     handleClientMessage(data) {
         try {
             const event = JSON.parse(data);
-            this.handleClientEvent(event);
+            this.handleEvent(event);
         }
         catch (e) {
-            console.error('Failed to parse client event:', e);
+            console.error('[LiveSession] Failed to parse client event:', e);
         }
+    }
+    /**
+     * Handle structured client event directly.
+     */
+    handleEvent(event) {
+        this.handleClientEvent(event);
     }
     setAgent(agent) {
         this.agent = agent;

@@ -51,6 +51,9 @@ class GeminiAgentBridge {
         }
     }
     async sendMedia(chunk) {
+        if (Math.random() < 0.05) {
+            console.log(`[GeminiAgentBridge] Sending media chunk to Gemini: ${chunk.mimeType}`);
+        }
         this.session?.sendRealtimeInput({
             mediaChunks: [chunk]
         });
