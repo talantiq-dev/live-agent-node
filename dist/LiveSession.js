@@ -6,6 +6,7 @@ class LiveSession extends events_1.EventEmitter {
     client;
     agent = null;
     pendingActions = new Map();
+    preAgentQueue = [];
     constructor(client) {
         super();
         this.client = client;
@@ -34,10 +35,16 @@ class LiveSession extends events_1.EventEmitter {
         this.agent.onServerContent = (content) => this.sendEvent({ event: 'server_content', data: content });
         this.agent.onClientAction = (action) => this.handleActionRequest(action);
         this.agent.onError = (error) => this.sendEvent({ event: 'server_content', data: { text: `Error: ${error.message}` } });
+        // Flush any events received before the agent was ready
+        const queue = [...this.preAgentQueue];
+        this.preAgentQueue = [];
+        queue.forEach(event => this.handleClientEvent(event));
     }
     handleClientEvent(event) {
-        if (!this.agent)
+        if (!this.agent) {
+            this.preAgentQueue.push(event);
             return;
+        }
         switch (event.event) {
             case 'media':
                 this.agent.sendMedia(event.data);

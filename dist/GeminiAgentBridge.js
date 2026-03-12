@@ -22,6 +22,7 @@ class GeminiAgentBridge {
             config: {
                 systemInstruction: { parts: [{ text: config.systemInstruction }] },
                 tools: config.tools,
+                responseModalities: ["AUDIO"],
             },
             callbacks: {
                 onmessage: (msg) => {

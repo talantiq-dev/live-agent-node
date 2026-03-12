@@ -9,6 +9,7 @@ export declare class LiveSession extends EventEmitter {
     private client;
     private agent;
     private pendingActions;
+    private preAgentQueue;
     constructor(client: SessionClient);
     /**
      * Handle raw JSON string message (backwards compatibility).

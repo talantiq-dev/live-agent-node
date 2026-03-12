@@ -10,6 +10,7 @@ export interface SessionClient {
 export class LiveSession extends EventEmitter {
     private agent: AgentBridge | null = null;
     private pendingActions = new Map<string, { resolve: (val: any) => void, timeout: NodeJS.Timeout }>();
+    private preAgentQueue: ClientEvent[] = [];
 
     constructor(private client: SessionClient) {
         super();
@@ -40,10 +41,18 @@ export class LiveSession extends EventEmitter {
         this.agent.onServerContent = (content) => this.sendEvent({ event: 'server_content', data: content });
         this.agent.onClientAction = (action) => this.handleActionRequest(action);
         this.agent.onError = (error) => this.sendEvent({ event: 'server_content', data: { text: `Error: ${error.message}` } });
+
+        // Flush any events received before the agent was ready
+        const queue = [...this.preAgentQueue];
+        this.preAgentQueue = [];
+        queue.forEach(event => this.handleClientEvent(event));
     }
 
     private handleClientEvent(event: ClientEvent) {
-        if (!this.agent) return;
+        if (!this.agent) {
+            this.preAgentQueue.push(event);
+            return;
+        }
 
         switch (event.event) {
             case 'media':
