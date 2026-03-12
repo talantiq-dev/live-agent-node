@@ -48,6 +48,10 @@ export class GeminiAgentBridge implements AgentBridge {
             const audio = parts.find((p: any) => p.inlinePcm)?.inlinePcm?.data;
             const text = parts.find((p: any) => p.text)?.text;
 
+            if (audio) {
+                console.log(`[GeminiAgentBridge] 🎵 Received Audio Response: ${audio.length} bytes`);
+            }
+
             this.onServerContent({
                 audio,
                 text,
@@ -73,7 +77,10 @@ export class GeminiAgentBridge implements AgentBridge {
             console.log(`[GeminiAgentBridge] Sending media chunk to Gemini: ${chunk.mimeType}`);
         }
         this.session?.sendRealtimeInput({
-            mediaChunks: [chunk]
+            mediaChunks: [{
+                mimeType: chunk.mimeType,
+                data: chunk.data
+            }]
         });
     }
 

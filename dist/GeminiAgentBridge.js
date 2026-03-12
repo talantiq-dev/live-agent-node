@@ -47,6 +47,9 @@ class GeminiAgentBridge {
             const parts = msg.serverContent.modelTurn?.parts || [];
             const audio = parts.find((p) => p.inlinePcm)?.inlinePcm?.data;
             const text = parts.find((p) => p.text)?.text;
+            if (audio) {
+                console.log(`[GeminiAgentBridge] 🎵 Received Audio Response: ${audio.length} bytes`);
+            }
             this.onServerContent({
                 audio,
                 text,
@@ -70,7 +73,10 @@ class GeminiAgentBridge {
             console.log(`[GeminiAgentBridge] Sending media chunk to Gemini: ${chunk.mimeType}`);
         }
         this.session?.sendRealtimeInput({
-            mediaChunks: [chunk]
+            mediaChunks: [{
+                    mimeType: chunk.mimeType,
+                    data: chunk.data
+                }]
         });
     }
     async sendContext(context) {
