@@ -106,7 +106,7 @@ export class LiveSession extends EventEmitter {
         });
 
         // Return result back to the agent
-        if (this.agent) {
+        if (this.agent && !action.silent) {
             if (this.agent.sendToolResponse) {
                 this.agent.sendToolResponse(action.actionId, action.type, result);
             } else {

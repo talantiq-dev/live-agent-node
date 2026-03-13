@@ -1,4 +1,4 @@
-import { LiveSession, SessionClient } from '../LiveSession';
+import { LiveSession, SessionClient } from './LiveSession';
 import { AgentBridge, ClientAction, ServerContent, MediaChunk } from '@live-agent/core';
 
 describe('LiveSession', () => {
@@ -50,5 +50,20 @@ describe('LiveSession', () => {
 
         // Verify agent received the result
         expect(mockAgent.sendContext).toHaveBeenCalledWith(expect.stringContaining('{"ok":true}'));
+    });
+
+    it('should NOT send tool response for silent actions', async () => {
+        const action: ClientAction = { type: 'silent_indicator', actionId: '456', payload: {}, silent: true };
+
+        // Trigger action from agent
+        const actionPromise = (session as any).handleActionRequest(action);
+
+        // Simulate client confirmation
+        clientMessageHandler(JSON.stringify({ event: 'action_confirmation', data: { actionId: '456', result: { acknowledged: true } } }));
+
+        await actionPromise;
+
+        // Verify agent did NOT receive a tool response or context
+        expect(mockAgent.sendContext).not.toHaveBeenCalled();
     });
 });
