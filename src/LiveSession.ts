@@ -94,14 +94,19 @@ export class LiveSession extends EventEmitter {
     }
 
     private async handleActionRequest(action: ClientAction) {
+        // Ensure we have a unique actionId to avoid collisions in pendingActions
+        if (!action.actionId) {
+            action.actionId = `action_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        }
+
         // Wrap tool call in a promise that waits for client confirmation
         const result = await new Promise((resolve) => {
             const timeout = setTimeout(() => {
-                this.pendingActions.delete(action.actionId);
+                this.pendingActions.delete(action.actionId!);
                 resolve({ status: 'timeout' });
             }, 10000);
 
-            this.pendingActions.set(action.actionId, { resolve, timeout });
+            this.pendingActions.set(action.actionId!, { resolve, timeout });
             this.sendEvent({ event: 'client_action', data: action });
         });
 
